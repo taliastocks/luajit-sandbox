@@ -10,8 +10,9 @@
 #include <unistd.h>
 
 
-const size_t max_stack_size = ((size_t) 2) << 20;
-const size_t max_memory = ((size_t) 8) << 20;
+const size_t max_stack_size = ((size_t) 20) << 20;
+const size_t stack_buffer = ((size_t) 5) << 20;
+const size_t max_memory = ((size_t) 50) << 20;
 
 size_t page_size;
 size_t stack_top_estimate;
@@ -30,6 +31,10 @@ static void segv_handler(int sig, siginfo_t *si, void *context) {
       return;
     }
     perror("failed to allocate stack space");
+  } else if ((size_t) addr > stack_top_estimate - max_stack_size - stack_buffer) {
+    fputs("stack limit exceeded\n", stderr);
+  } else {
+    fputs("segmentation fault\n", stderr);
   }
 
   // Remove signal handler and re-raise signal.
