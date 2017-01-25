@@ -1,0 +1,2 @@
+# luajit-sandbox
+LuaJIT Sandbox
