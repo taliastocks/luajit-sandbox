@@ -14,7 +14,7 @@ clean:
 run: bin/exe
 	time -p ./$<; echo "Return status: $$?"
 
-bin/exe: src/main.c build/resource_limit.o build/sandbox.o
+bin/exe: src/main.c build/resource_limit.o build/sandbox.o build/lib/libluajit-5.1.a
 	$(CC) $+ -o $@
 
 build/resource_limit.o: src/resource_limit.c src/resource_limit.h
