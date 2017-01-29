@@ -4,21 +4,21 @@ $(shell mkdir -p build)
 CC := gcc -W -Wall -Wextra -pedantic -Werror -std=c11
 
 .PHONY: default
-default: bin/sandbox
+default: bin/exe
 
 .PHONY: clean
 clean:
 	rm -rf bin/* build/*
 
 .PHONY: run
-run: bin/sandbox
+run: bin/exe
 	time -p ./$<
 
-bin/sandbox: src/sandbox.c build/resource_limit.o
+bin/exe: src/main.c build/resource_limit.o build/sandbox.o
 	$(CC) $+ -o $@
 
-build/mmap_stack.o: src/mmap_stack.c build/resource_limit.o
 build/resource_limit.o: src/resource_limit.c src/resource_limit.h
+build/sandbox.o: src/sandbox.c src/sandbox.h src/resource_limit.h
 
 build/%.o:
 	$(CC) -c $< -o $@
