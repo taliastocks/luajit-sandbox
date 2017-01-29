@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     struct sandbox_settings sandbox_settings;
     sandbox_settings.max_memory = max_memory;
     sandbox_settings.max_cpu_time = 1;
-    sandbox_init(&sandbox_settings);
+    if (sandbox_init(&sandbox_settings)) return 1;
 
     // Simulate misbehaving code.
     for (;;);
