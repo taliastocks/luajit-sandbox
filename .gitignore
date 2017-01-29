@@ -33,4 +33,5 @@
 *.su
 
 # Directories
-bin/
+/bin/
+/build/

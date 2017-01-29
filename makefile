@@ -23,5 +23,8 @@ build/sandbox.o: src/sandbox.c src/sandbox.h src/resource_limit.h
 build/%.o:
 	$(CC) -c $< -o $@
 
+build/include/luajit-2.0/% build/lib/%: third_party/luajit-2.0/Makefile
+	cd third_party/luajit-2.0/ && $(MAKE) install PREFIX=$(realpath build)
+
 third_party/luajit-2.0/Makefile:
 	git submodule update third_party/luajit-2.0/
