@@ -1,5 +1,4 @@
 #include "resource_limit.h"
-#include "mmap_stack.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,8 +20,6 @@ void recurse(int i) {
 int main(int argc, char **argv) {
   (void) argc;
   (void) argv;
-
-  mmap_stack_init_stack();
 
   int pid = fork();
   if (pid == -1) {
