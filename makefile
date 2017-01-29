@@ -22,3 +22,6 @@ build/sandbox.o: src/sandbox.c src/sandbox.h src/resource_limit.h
 
 build/%.o:
 	$(CC) -c $< -o $@
+
+third_party/luajit-2.0/Makefile:
+	git submodule update third_party/luajit-2.0/
