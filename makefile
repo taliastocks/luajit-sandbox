@@ -12,7 +12,7 @@ clean:
 
 .PHONY: run
 run: bin/exe
-	time -p ./$<
+	time -p ./$<; echo "Return status: $$?"
 
 bin/exe: src/main.c build/resource_limit.o build/sandbox.o
 	$(CC) $+ -o $@
