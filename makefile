@@ -10,9 +10,17 @@ default: bin/exe
 clean:
 	rm -rf bin/* build/*
 
+.PHONY: cleaner
+cleaner: clean
+	cd third_party/luajit-2.0 && make clean
+
 .PHONY: run
 run: bin/exe
-	time -p ./$<; echo "Return status: $$?"
+	time -p $<; echo "Return status: $$?"
+
+.PHONY: strace
+strace: bin/exe
+	strace $<; echo "Return status: $$?"
 
 bin/exe: src/main.c build/resource_limit.o build/sandbox.o build/lib/libluajit-5.1.a
 	$(CC) $+ -o $@
