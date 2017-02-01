@@ -3,6 +3,7 @@ $(shell mkdir -p build)
 $(shell mkdir -p build/include)
 
 INCLUDE_FLAGS := -I$(realpath build/include)
+LDFLAGS := -lm -ldl
 CC := gcc -O2 -W -Wall -Wextra -pedantic -Werror -std=c11 $(INCLUDE_FLAGS)
 
 .PHONY: default
@@ -29,9 +30,9 @@ strace: bin/exe
 	strace $<; echo "Return status: $$?"
 
 bin/exe: build/main.o build/resource_limit.o build/sandbox.o build/lib/libluajit-5.1.a
-	$(CC) $+ -o $@
+	$(CC) $+ -o $@ $(LDFLAGS)
 
-build/main.o: src/main.c
+build/main.o: src/main.c build/include/luajit-2.0/lua.h
 build/resource_limit.o: src/resource_limit.c src/resource_limit.h
 build/sandbox.o: src/sandbox.c src/sandbox.h src/resource_limit.h
 
