@@ -14,19 +14,6 @@
 const size_t max_memory = ((size_t) 50) << 20;
 
 
-static int traceback(lua_State *L) {
-  if (!lua_isstring(L, 1)) { /* 'message' not a string? */
-    return 1;  /* keep it intact */
-  }
-  lua_pushstring(L, "traceback");
-  lua_gettable(L, LUA_REGISTRYINDEX);
-  lua_pushvalue(L, 1);  /* pass error message */
-  lua_pushinteger(L, 2);  /* skip this function and traceback */
-  lua_call(L, 2, 1);  /* call debug.traceback */
-  return 1;
-}
-
-
 int main(int argc, char **argv) {
   (void) argc;
   (void) argv;
@@ -50,12 +37,9 @@ int main(int argc, char **argv) {
     return 1;
   }
   luaL_openlibs(L);
-  lua_pushcfunction(L, traceback);
   lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-  lua_pushstring(L, "traceback");
-  lua_getfield(L, -2, "traceback");
-  lua_settable(L, LUA_REGISTRYINDEX);
-  lua_pop(L, 1);
+  lua_getfield(L, -1, "traceback");
+  lua_remove(L, -2);
   result = luaL_loadbuffer(L, buffer, bufsize, "script");
   if (result == LUA_ERRSYNTAX) {
     fprintf(stderr, "syntax error");
