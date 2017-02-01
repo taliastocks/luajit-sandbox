@@ -1,7 +1,9 @@
 $(shell mkdir -p bin)
 $(shell mkdir -p build)
+$(shell mkdir -p build/include)
 
-CC := gcc -W -Wall -Wextra -pedantic -Werror -std=c11
+INCLUDE_FLAGS := -I$(realpath build/include)
+CC := gcc -O2 -W -Wall -Wextra -pedantic -Werror -std=c11 $(INCLUDE_FLAGS)
 
 .PHONY: default
 default: bin/exe
@@ -11,8 +13,12 @@ clean:
 	rm -rf bin/* build/*
 
 .PHONY: cleaner
-cleaner: clean
+cleaner: clean third_party/luajit-2.0/Makefile
 	cd third_party/luajit-2.0 && make clean
+
+.PHONY: cleanest
+cleanest: clean
+	find third_party/luajit-2.0/ -mindepth 1 -maxdepth 1 -exec rm -r {} \+
 
 .PHONY: run
 run: bin/exe
