@@ -3,6 +3,6 @@
 
 #include <sys/resource.h>
 
-int set_resource_limit(int, rlim_t, const char *);
+int set_resource_limit(int, rlim_t);
 
 #endif
