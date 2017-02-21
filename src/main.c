@@ -25,13 +25,5 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // Simulate misbehaving code.
-  for (;;);
-  /*
-  for (int i; malloc(1 << 20); ++i) {
-    printf("%i\n", i);
-  }
-  */
-
   return 0;
 }

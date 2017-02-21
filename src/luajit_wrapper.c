@@ -13,7 +13,7 @@ static int run(lua_State *L) {
     fprintf(stderr, "%s\n", lua_tostring(L, -1));
     return 1;
   } else if (error == LUA_ERRMEM) {
-    fprintf(stderr, "failed to allocate memory");
+    fprintf(stderr, "failed to allocate memory\n");
     return 1;
   } else if (error == LUA_ERRERR) {
     fprintf(stderr, "error running error handler\n");
@@ -43,10 +43,10 @@ static int load_fd(lua_State *L, int fd) {
   closure.fd = fd;
   int error = lua_load(L, fd_reader, &closure, "script");
   if (error == LUA_ERRSYNTAX) {
-    fprintf(stderr, "syntax error");
+    fprintf(stderr, "syntax error\n");
     return 1;
   } else if (error == LUA_ERRMEM) {
-    fprintf(stderr, "failed to allocate memory");
+    fprintf(stderr, "failed to allocate memory\n");
     return 1;
   }
   return 0;
@@ -67,7 +67,7 @@ int luajit_wrapper_load_and_run(int fd) {
   lua_State *L;
   L = luaL_newstate();
   if (L == NULL) {
-    fprintf(stderr, "failed to allocate memory");
+    fprintf(stderr, "failed to allocate memory\n");
     return 1;
   }
   initialize_vm(L);
