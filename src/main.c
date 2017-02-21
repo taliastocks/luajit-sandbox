@@ -1,7 +1,4 @@
-#include <luajit-2.0/lua.h>
-#include <luajit-2.0/lualib.h>
-#include <luajit-2.0/lauxlib.h>
-
+#include "luajit_wrapper.h"
 #include "sandbox.h"
 
 #include <stdio.h>
@@ -24,48 +21,9 @@ int main(int argc, char **argv) {
   sandbox_settings.max_cpu_time = 1;
   if (sandbox_init(&sandbox_settings)) return 1;
 
-  // Program.
-  char *buffer = "io.write('hello world\\n')\ndebug=0\nhello.world()";
-  size_t bufsize = strlen(buffer);
-
-  // Initialize the Lua state.
-  int result;
-  lua_State *L;
-  L = luaL_newstate();
-  if (L == NULL) {
-    fprintf(stderr, "failed to allocate memory");
+  if (luajit_wrapper_load_and_run(0)) { // stdin
     return 1;
   }
-  luaL_openlibs(L);
-  lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-  lua_getfield(L, -1, "traceback");
-  lua_remove(L, -2);
-  result = luaL_loadbuffer(L, buffer, bufsize, "script");
-  if (result == LUA_ERRSYNTAX) {
-    fprintf(stderr, "syntax error");
-    lua_close(L);
-    return 1;
-  } else if (result == LUA_ERRMEM) {
-    fprintf(stderr, "failed to allocate memory");
-    lua_close(L);
-    return 1;
-  }
-  result = lua_pcall(L, 0, LUA_MULTRET, lua_gettop(L) - 1);
-  if (result == LUA_ERRRUN) {
-    fprintf(stderr, "%s\n", lua_tostring(L, -1));
-    lua_close(L);
-    return 1;
-  } else if (result == LUA_ERRMEM) {
-    fprintf(stderr, "failed to allocate memory");
-    lua_close(L);
-    return 1;
-  } else if (result == LUA_ERRERR) {
-    fprintf(stderr, "error running error handler\n");
-    fprintf(stderr, "%s\n", lua_tostring(L, -1));
-    lua_close(L);
-    return 1;
-  }
-  lua_close(L);
 
   // Simulate misbehaving code.
   for (;;);

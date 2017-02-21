@@ -23,18 +23,19 @@ cleanest: clean
 
 .PHONY: run
 run: bin/exe
-	time -p $<; echo "Return status: $$?"
+	cat "test.lua" | time -p $<; echo "Return status: $$?"
 
 .PHONY: strace
 strace: bin/exe
-	strace $<; echo "Return status: $$?"
+	cat "test.lua" | strace $<; echo "Return status: $$?"
 
-bin/exe: build/main.o build/resource_limit.o build/sandbox.o build/lib/libluajit-5.1.a
+bin/exe: build/main.o build/resource_limit.o build/sandbox.o build/luajit_wrapper.o build/lib/libluajit-5.1.a
 	$(CC) $+ -o $@ $(LDFLAGS)
 
 build/main.o: src/main.c build/include/luajit-2.0/lua.h
 build/resource_limit.o: src/resource_limit.c src/resource_limit.h
 build/sandbox.o: src/sandbox.c src/sandbox.h src/resource_limit.h
+build/luajit_wrapper.o: src/luajit_wrapper.c src/luajit_wrapper.h
 
 build/%.o:
 	$(CC) -c $< -o $@
