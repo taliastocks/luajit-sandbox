@@ -3,7 +3,7 @@ $(shell mkdir -p build)
 $(shell mkdir -p build/include)
 
 INCLUDE_FLAGS := -I$(realpath build/include)
-LDFLAGS := -lm -ldl
+LDFLAGS := -lm -ldl -lseccomp
 CC := gcc -O2 -W -Wall -Wextra -pedantic -Werror -std=c11 $(INCLUDE_FLAGS)
 
 .PHONY: default
