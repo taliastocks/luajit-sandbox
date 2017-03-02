@@ -8,6 +8,9 @@
 #include <unistd.h>
 
 
+extern char **environ;
+
+
 const size_t max_memory = ((size_t) 50) << 20;
 
 
@@ -15,7 +18,17 @@ int main(int argc, char **argv) {
   (void) argc;
   (void) argv;
 
-  // Set up resource limits.
+  // If this process was run with environment variables, clear them all
+  // by loading the process image again.
+  if (environ[0] != NULL) {
+    char *new_environ[] = {NULL};
+    execve(argv[0], argv, new_environ);
+    // If execve() returned, it failed.
+    perror("failed to restart process without environment");
+    return 1;
+  }
+
+  // Set up sandbox.
   struct sandbox_settings sandbox_settings;
   sandbox_settings.max_memory = max_memory;
   sandbox_settings.max_cpu_time = 1;
