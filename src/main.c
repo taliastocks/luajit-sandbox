@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   // by loading the process image again.
   if (environ[0] != NULL) {
     char *new_environ[] = {NULL};
-    execve(argv[0], argv, new_environ);
+    execve("/proc/self/exe", argv, new_environ);
     // If execve() returned, it failed.
     perror("failed to restart process without environment");
     return 1;

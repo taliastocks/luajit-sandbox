@@ -1,3 +1,6 @@
+#define _DEFAULT_SOURCE
+#include <stdlib.h>
+
 #include "luajit_wrapper.h"
 
 #include <luajit-2.0/lua.h>
@@ -54,8 +57,10 @@ static int load_fd(lua_State *L, int fd) {
 
 
 static void initialize_vm(lua_State *L) {
+  putenv("LUA_PATH="); // disable require() search path for lua files
+  putenv("LUA_CPATH="); // disable require() search path for shared objects
   luaL_openlibs(L);
-  lua_getfield(L, LUA_GLOBALSINDEX, "debug"); // stack: debug
+  lua_getglobal(L, "debug"); // stack: debug
   lua_getfield(L, -1, "traceback"); // stack: debug, debug.traceback
   lua_remove(L, -2); // stack: debug.traceback
 }

@@ -1,3 +1,4 @@
+require("blah")
 io.write('hello world\n')
 local i = 0
 while true do
