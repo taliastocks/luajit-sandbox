@@ -5,6 +5,7 @@ $(shell mkdir -p build/usr/local/include)
 INCLUDE_FLAGS := -I$(realpath build/usr/local/include)
 LDFLAGS := -s -static -lm -lseccomp
 CC := gcc -O2 -W -Wall -Wextra -pedantic -Werror -std=c11 $(INCLUDE_FLAGS)
+AMALG := amalg
 
 .PHONY: default
 default: bin/exe
@@ -42,7 +43,7 @@ build/%.o:
 	$(CC) -c $< -o $@
 
 build/usr/local/include/luajit-2.0/% build/usr/local/lib/%: third_party/luajit-2.0/Makefile
-	cd third_party/luajit-2.0/ && $(MAKE) amalg && $(MAKE) install DESTDIR=$(realpath build)
+	cd third_party/luajit-2.0/ && $(MAKE) $(AMALG) && $(MAKE) install DESTDIR=$(realpath build)
 
 third_party/luajit-2.0/Makefile:
 	git submodule update third_party/luajit-2.0/
