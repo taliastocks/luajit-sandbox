@@ -57,6 +57,8 @@ static int load_fd(lua_State *L, int fd) {
 
 
 static void initialize_vm(lua_State *L) {
+  // Don't bother checking for errors in putenv() here. It can only possibly fail with ENOMEM
+  // and if we've already run out of memory at this point, there are bigger problems.
   putenv("LUA_PATH="); // disable require() search path for lua files
   putenv("LUA_CPATH="); // disable require() search path for shared objects
   luaL_openlibs(L);
