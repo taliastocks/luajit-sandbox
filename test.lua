@@ -6,6 +6,8 @@ while true do
   if i % (10 * 1000 * 1000) == 0 then
     io.write(i .. '\n')
   end
+  if i % 100 == 0 then
+    a[i] = i
+  end
   i = i + 1
-  a[i] = i
 end
