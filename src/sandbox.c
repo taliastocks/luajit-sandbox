@@ -10,28 +10,66 @@
 
 #include <errno.h>
 #include <seccomp.h> // libseccomp
+#include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/resource.h>
+
+
+bool sandbox_cpu_exceeded = false;
 
 
 #define err(v, msg) do { if (v) { perror(msg); return 1; } } while (0)
 
 
-static int set_resource_limit(int resource, rlim_t value) {
+static void catch_xcpu(int sig) {
+  /*
+    Signal handler to set the sandbox_cpu_exceeded flag and update the current
+    CPU limit to the hard limit. Does not report errors, since the program
+    state is unknown and IO might be unsafe.
+  */
+  (void) sig;
+  sandbox_cpu_exceeded = true;
   struct rlimit lim;
-  lim.rlim_cur = lim.rlim_max = value;
-  if (setrlimit(resource, &lim) != 0) {
-    return 1;
-  }
-  return 0;
+  if (getrlimit(RLIMIT_CPU, &lim))
+    return; // it's not safe to output an error here
+  lim.rlim_cur = lim.rlim_max;
+  setrlimit(RLIMIT_CPU, &lim); // no point detecting errors here
+}
+
+
+static void catch_sys(int sig) {
+  (void) sig;
+  exit(2);
 }
 
 
 int sandbox_init(const struct sandbox_settings *sandbox_settings) {
+  struct sigaction action;
+  // Set up signal handler for detecting reaching the soft CPU limit.
+  memset(&action, '\0', sizeof(action));
+  action.sa_handler = &catch_xcpu;
+  action.sa_flags = SA_RESETHAND; // only call the signal handler once
+  err(sigaction(SIGXCPU, &action, NULL), "failed to set soft CPU limit handler");
+  // Set up signal handler for cleanly exiting on SIGSYS instead of dumping core.
+  memset(&action, '\0', sizeof(action));
+  action.sa_handler = &catch_sys;
+  err(sigaction(SIGSYS, &action, NULL), "failed to set sandbox violation exit handler");
+
   // Set up resource limits.
-  err(set_resource_limit(RLIMIT_CORE, 0), "failed to set core size limit");
-  err(set_resource_limit(RLIMIT_AS, sandbox_settings->max_memory), "failed to set memory limit");
-  err(set_resource_limit(RLIMIT_CPU, sandbox_settings->max_cpu_time), "failed to set CPU limit");
+  struct rlimit lim;
+  lim.rlim_cur = 0;
+  lim.rlim_max = 0;
+  err(setrlimit(RLIMIT_CORE, &lim), "failed to set core size limit");
+  lim.rlim_cur = sandbox_settings->max_memory;
+  if (lim.rlim_cur == 0) lim.rlim_cur = RLIM_INFINITY; // interpret zero as unlimited memory
+  lim.rlim_max = lim.rlim_cur;
+  err(setrlimit(RLIMIT_AS, &lim), "failed to set memory limit");
+  lim.rlim_cur = sandbox_settings->max_cpu_time;
+  if (lim.rlim_cur == 0) lim.rlim_cur = RLIM_INFINITY; // interpret zero as unlimited CPU
+  lim.rlim_max = (lim.rlim_cur == RLIM_INFINITY) ? RLIM_INFINITY : (lim.rlim_cur + 1);
+  err(setrlimit(RLIMIT_CPU, &lim), "failed to set CPU limit");
 
   // Switch to a new user namespace. This has the effect of dropping any capabilities
   // held in the parent namespace.
@@ -65,6 +103,10 @@ int sandbox_init(const struct sandbox_settings *sandbox_settings) {
   any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(open), 0);
   any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(readlink), 0);
   any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(stat), 0);
+
+  // Allow getting and setting RLIMIT_CPU:
+  any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(getrlimit), 1, SCMP_A0(SCMP_CMP_EQ, RLIMIT_CPU));
+  any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(setrlimit), 1, SCMP_A0(SCMP_CMP_EQ, RLIMIT_CPU));
 
   any_errors |= seccomp_load(ctx); // apply the filter
 
