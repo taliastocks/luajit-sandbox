@@ -14,7 +14,7 @@ struct sandbox_settings {
   unsigned int max_cpu_time;
 };
 
-extern bool sandbox_cpu_exceeded;
+extern volatile bool sandbox_cpu_exceeded;
 
 int sandbox_init(const struct sandbox_settings *);
 

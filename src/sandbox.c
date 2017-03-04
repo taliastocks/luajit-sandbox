@@ -17,7 +17,7 @@
 #include <sys/resource.h>
 
 
-bool sandbox_cpu_exceeded = false;
+volatile bool sandbox_cpu_exceeded = false;
 
 
 #define err(v, msg) do { if (v) { perror(msg); return 1; } } while (0)
