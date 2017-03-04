@@ -41,7 +41,7 @@ static void catch_xcpu(int sig) {
 
 static void catch_sys(int sig) {
   (void) sig;
-  exit(2);
+  exit(1);
 }
 
 
