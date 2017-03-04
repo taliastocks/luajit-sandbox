@@ -30,12 +30,14 @@ static void catch_xcpu(int sig) {
     state is unknown and IO might be unsafe.
   */
   (void) sig;
+  int errno_save = errno;
   sandbox_cpu_exceeded = true;
   struct rlimit lim;
-  if (getrlimit(RLIMIT_CPU, &lim))
-    return; // it's not safe to output an error here
-  lim.rlim_cur = lim.rlim_max;
-  setrlimit(RLIMIT_CPU, &lim); // no point detecting errors here
+  if (!getrlimit(RLIMIT_CPU, &lim)) {
+    lim.rlim_cur = lim.rlim_max;
+    setrlimit(RLIMIT_CPU, &lim); // no point detecting errors here
+  }
+  errno = errno_save; // Restore errno value, since it may have been changed by getrlimit/setrlimit.
 }
 
 
