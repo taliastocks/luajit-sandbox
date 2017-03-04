@@ -1,15 +1,30 @@
+/*
+  Initialize a sandbox on Linux.
+  Copyright (C) 2017 Collin RM Stocks. All rights reserved.
+*/
+
 #define _GNU_SOURCE
 #include <sched.h>
 
 #include "sandbox.h"
-#include "resource_limit.h"
 
 #include <errno.h>
 #include <seccomp.h> // libseccomp
 #include <stdio.h>
+#include <sys/resource.h>
 
 
 #define err(v, msg) do { if (v) { perror(msg); return 1; } } while (0)
+
+
+static int set_resource_limit(int resource, rlim_t value) {
+  struct rlimit lim;
+  lim.rlim_cur = lim.rlim_max = value;
+  if (setrlimit(resource, &lim) != 0) {
+    return 1;
+  }
+  return 0;
+}
 
 
 int sandbox_init(const struct sandbox_settings *sandbox_settings) {
@@ -45,10 +60,11 @@ int sandbox_init(const struct sandbox_settings *sandbox_settings) {
   any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0);
 
   // Return errors on the following system calls:
-  any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(open), 0);
   any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(access), 0);
-  any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(stat), 0);
   any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(lstat), 0);
+  any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(open), 0);
+  any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(readlink), 0);
+  any_errors |= seccomp_rule_add(ctx, SCMP_ACT_ERRNO(EACCES), SCMP_SYS(stat), 0);
 
   any_errors |= seccomp_load(ctx); // apply the filter
 

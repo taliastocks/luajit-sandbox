@@ -1,3 +1,8 @@
+/*
+  Entrypoint.
+  Copyright (C) 2017 Collin RM Stocks. All rights reserved.
+*/
+
 #include "luajit_wrapper.h"
 #include "sandbox.h"
 

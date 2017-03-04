@@ -30,12 +30,11 @@ run: bin/exe
 strace: bin/exe
 	cat "test.lua" | strace $<; echo "Return status: $$?"
 
-bin/exe: build/main.o build/resource_limit.o build/sandbox.o build/luajit_wrapper.o build/usr/local/lib/libluajit-5.1.a build/fake_dl.o
+bin/exe: build/main.o build/sandbox.o build/luajit_wrapper.o build/usr/local/lib/libluajit-5.1.a build/fake_dl.o
 	$(CC) $+ -o $@ $(LDFLAGS)
 
 build/main.o: src/main.c build/usr/local/include/luajit-2.0/lua.h
-build/resource_limit.o: src/resource_limit.c src/resource_limit.h
-build/sandbox.o: src/sandbox.c src/sandbox.h src/resource_limit.h
+build/sandbox.o: src/sandbox.c src/sandbox.h
 build/luajit_wrapper.o: src/luajit_wrapper.c src/luajit_wrapper.h
 build/fake_dl.o: src/fake_dl.c
 

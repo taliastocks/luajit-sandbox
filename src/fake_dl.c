@@ -1,3 +1,8 @@
+/*
+  Stub library implementing the same interface as libdl.
+  Copyright (C) 2017 Collin RM Stocks. All rights reserved.
+*/
+
 #include <stddef.h>
 #include <dlfcn.h>
 
