@@ -42,7 +42,8 @@ build/%.o:
 	$(CC) -c $< -o $@
 
 build/usr/local/include/luajit-2.0/% build/usr/local/lib/%: third_party/luajit-2.0/Makefile
-	cd third_party/luajit-2.0/ && $(MAKE) $(AMALG) && $(MAKE) install DESTDIR=$(realpath build)
+	cd third_party/luajit-2.0/ && $(MAKE) CFLAGS="-DLUAJIT_ENABLE_LUA52COMPAT" $(AMALG)
+	cd third_party/luajit-2.0/ && $(MAKE) install DESTDIR=$(realpath build)
 
 third_party/luajit-2.0/Makefile:
 	git submodule update third_party/luajit-2.0/
