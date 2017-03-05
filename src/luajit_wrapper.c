@@ -11,7 +11,7 @@
 
 
 static int run(lua_State *L) {
-  int error = lua_pcall(L, 0, LUA_MULTRET, lua_gettop(L) - 1);
+  int error = lua_pcall(L, 0, LUA_MULTRET, -2);
   if (error == LUA_ERRRUN) {
     fprintf(stderr, "%s\n", lua_tostring(L, -1));
     return 1;
