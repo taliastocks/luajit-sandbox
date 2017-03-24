@@ -8,7 +8,7 @@ CC := gcc -O2 -W -Wall -Wextra -pedantic -Werror -std=c11 $(INCLUDE_FLAGS)
 AMALG := amalg
 
 OBJECTS := build/main.o build/sandbox.o build/luajit_wrapper.o build/usr/local/lib/libluajit-5.1.a build/fake_dl.o
-OBJECTS := $(OBJECTS) build/resumer.o build/mainloop.o
+OBJECTS := $(OBJECTS) build/resumer.o
 
 .PHONY: default
 default: bin/exe
@@ -41,7 +41,6 @@ build/sandbox.o: src/sandbox.c src/sandbox.h
 build/luajit_wrapper.o: src/luajit_wrapper.c src/luajit_wrapper.h
 build/fake_dl.o: src/fake_dl.c
 build/resumer.o: src/c-runtime/resumer.c src/c-runtime/resumer.h src/c-runtime/lj_headers.h
-build/mainloop.o: src/c-runtime/mainloop.c src/c-runtime/mainloop.h src/c-runtime/lj_headers.h
 
 build/%.o:
 	$(CC) -c $< -o $@
