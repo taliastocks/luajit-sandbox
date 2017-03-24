@@ -105,6 +105,10 @@ static int cr_Resumer_resume(lua_State *L) {
   lua_pushvalue(L, lua_upvalueindex(1));    // stack: [args..., resume_to]
 
   if (lua_pushthread(L)) {                  // stack: [args..., resume_to, current coroutine]
+
+    // Resumer:resume() was called from the main thread. Instead of yielding to the
+    // mainloop with the args and `resume_to` (like we would do if we were in any other
+    // thread), become the mainloop and resume `resume_to` directly.
     lua_pop(L, 2);                          // stack: [args...]
     lua_State *resume_to = lua_tothread(L, lua_upvalueindex(1));
     if (resume_to == NULL) {
@@ -114,8 +118,11 @@ static int cr_Resumer_resume(lua_State *L) {
       // you did this in a thread other than the main thread.
       return nargs;
     }
+
+    // stack: [args...]
     luaL_checkstack(resume_to, nargs, "Resumer:resume() could not extend target thread's stack");
-    lua_xmove(L, resume_to, nargs);         // stack: []
+    lua_xmove(L, resume_to, nargs);
+    // stack: []
     // resume_to stack: [args...]
 
     // Notice that we maintain a reference to `resume_to` in the upvalues until we're
