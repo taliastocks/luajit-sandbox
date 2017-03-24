@@ -25,14 +25,6 @@ cleaner: clean third_party/luajit-2.0/Makefile
 cleanest: clean
 	find third_party/luajit-2.0/ -mindepth 1 -maxdepth 1 -exec rm -r {} \+
 
-.PHONY: run
-run: bin/exe
-	cat "test.lua" | time -p $<; echo "Return status: $$?"
-
-.PHONY: strace
-strace: bin/exe
-	cat "test.lua" | strace $<; echo "Return status: $$?"
-
 bin/exe: $(OBJECTS)
 	$(CC) $+ -o $@ $(LDFLAGS)
 
