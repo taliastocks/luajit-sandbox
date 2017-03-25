@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "luajit_wrapper.h"
+#include "c-runtime/resumer.h"
 
 #include <luajit-2.0/lua.h>
 #include <luajit-2.0/lualib.h>
@@ -62,6 +63,7 @@ static void initialize_vm(lua_State *L) {
   putenv("LUA_PATH="); // disable require() search path for lua files
   putenv("LUA_CPATH="); // disable require() search path for shared objects
   luaL_openlibs(L);
+  cropen_resumer(L);
   lua_getglobal(L, "debug"); // stack: debug
   lua_getfield(L, -1, "traceback"); // stack: debug, debug.traceback
   lua_remove(L, -2); // stack: debug.traceback

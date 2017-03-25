@@ -1,5 +1,7 @@
 #include "resumer.h"
 
+#include <string.h>
+
 
 /*
   Resumer:outer_loop(partial(thread, args...))
@@ -155,4 +157,13 @@ int cr_new_Resumer(lua_State *L) {
   // thread stack: [function]
   lua_pushcclosure(L, &cr_Resumer_resume, 1);     // stack: [resumer(thread[function])]
   return 1;
+}
+
+
+void cropen_resumer(lua_State *L) {
+  luaL_Reg library[2];
+  memset(&library, '\0', sizeof(library));
+  library[0].name = "Resumer";
+  library[0].func = &cr_new_Resumer;
+  luaL_register(L, "resumer", library);
 }

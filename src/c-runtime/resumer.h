@@ -15,4 +15,7 @@
 int cr_new_Resumer(lua_State *);
 
 
+void cropen_resumer(lua_State *);
+
+
 #endif
