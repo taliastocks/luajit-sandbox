@@ -13,6 +13,10 @@ OBJECTS := $(OBJECTS) build/resumer.o
 .PHONY: default
 default: bin/exe
 
+.PHONY: test
+test: bin/exe
+	./test_runner.py -vvvv
+
 .PHONY: clean
 clean:
 	rm -rf bin/* build/*
