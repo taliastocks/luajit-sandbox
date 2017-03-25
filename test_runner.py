@@ -43,7 +43,7 @@ class TestRunnerBase(object):
         return (
             (colored('=' * 20 + ' START ' + '=' * 20, 'blue') + '\n' if first else '') +
             text + ('' if text.endswith('\n') else '\n') +
-            (colored('=' * 21 + ' END ' + '=' * 21, 'blue') if last else colored('-' * 47, 'magenta'))
+            (colored('=' * 21 + ' END ' + '=' * 21, 'blue') if last else colored('-' * 47, 'blue'))
         )
 
     @staticmethod
@@ -177,14 +177,14 @@ class DiffTestRunner(TestRunnerBase):
             runner.run(fpath)
         except RunnerError as e:
             if runner.stdout:
-                self.capture_output('Standard out:\n' + runner.stdout)
+                self.capture_output(colored('STDOUT:\n', 'magenta') + runner.stdout)
             if runner.stderr:
-                self.capture_output('Standard error:\n' + runner.stderr)
+                self.capture_output(colored('STDERR:\n', 'magenta') + runner.stderr)
             self.capture_output(str(e))
             return 'Could not perform diff due to error(s) above.'
 
         if runner.stderr:
-            self.capture_output('Standard error:\n' + runner.stderr)
+            self.capture_output(colored('STDERR:\n', 'magenta') + runner.stderr)
 
         output = runner.stdout
         reference_path = root + '.txt'
@@ -236,14 +236,16 @@ class ScriptRunner(RunnerBase):
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
+        outs, errs = b'', b''
         try:
             outs, errs = proc.communicate(timeout=15)
         except subprocess.TimeoutExpired:
             proc.kill()
             outs, errs = proc.communicate()
-
-        self.stdout = outs.decode('utf-8')
-        self.stderr = errs.decode('utf-8')
+            raise RunnerError('Script timed out.')
+        finally:
+            self.stdout = outs.decode('utf-8')
+            self.stderr = errs.decode('utf-8')
 
 
 def main():
