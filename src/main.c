@@ -3,10 +3,13 @@
   Copyright (C) 2017 Collin RM Stocks. All rights reserved.
 */
 
+#define _GNU_SOURCE
+
 #include "luajit_wrapper.h"
 #include "sandbox.h"
 
 #include <argp.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,7 +23,7 @@ extern char **environ;
 const char *argp_program_version = "luajit-sandbox 0.0.0 (development)";
 const char *argp_program_bug_address = "https://github.com/collinstocks/luajit-sandbox/issues";
 static char doc[] = "Sandbox for running untrusted Lua code on Linux.";
-static char args_doc[] = "";
+static char args_doc[] = "[program-file]";
 static struct argp_option options[] = {
   {
     "cpu", 't', "seconds", 0,
@@ -49,8 +52,14 @@ static struct argp_option options[] = {
 };
 
 
+struct args_struct {
+  struct sandbox_settings sandbox_settings;
+  char *script_file;
+};
+
+
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
-  struct sandbox_settings *sandbox_settings = state->input;
+  struct args_struct *args = state->input;
   unsigned long parsed_value;
   char *end;
   errno = 0;
@@ -61,7 +70,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         argp_error(state, "invalid value for -t: %s", arg);
         return EINVAL;
       }
-      sandbox_settings->max_cpu_time = parsed_value;
+      args->sandbox_settings.max_cpu_time = parsed_value;
       break;
     case 'm':
       parsed_value = strtoul(arg, &end, 10);
@@ -69,10 +78,13 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         argp_error(state, "invalid value for -m: %s", arg);
         return EINVAL;
       }
-      sandbox_settings->max_memory = parsed_value << 20;
+      args->sandbox_settings.max_memory = parsed_value << 20;
       break;
     case ARGP_KEY_ARG:
-      return 0;
+      if (args->script_file == NULL) { // Only allow setting the script file once.
+        args->script_file = arg;
+        return 0;
+      }
     default:
       return ARGP_ERR_UNKNOWN;
   }
@@ -93,14 +105,27 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // Set up sandbox.
-  struct sandbox_settings sandbox_settings;
-  sandbox_settings.max_memory = ((size_t) 50) << 20;
-  sandbox_settings.max_cpu_time = 1;
-  argp_parse(&argp, argc, argv, 0, 0, &sandbox_settings);
-  if (sandbox_init(&sandbox_settings)) return 1;
+  // Set defaults and parse args.
+  struct args_struct args;
+  args.sandbox_settings.max_memory = ((size_t) 50) << 20;
+  args.sandbox_settings.max_cpu_time = 1;
+  args.script_file = NULL;
+  argp_parse(&argp, argc, argv, 0, 0, &args);
 
-  if (luajit_wrapper_load_and_run(0)) { // stdin
+  // If there's a positional file argument, open it. Otherwise, use stdin.
+  int progfile = 0;
+  if (args.script_file != NULL) {
+    progfile = open(args.script_file, O_CLOEXEC, O_RDONLY);
+    if (progfile == -1) {
+      perror("failed to open file");
+      return 1;
+    }
+  }
+
+  // Set up sandbox.
+  if (sandbox_init(&args.sandbox_settings)) return 1;
+
+  if (luajit_wrapper_load_and_run(progfile)) {
     return 1;
   }
 

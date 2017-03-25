@@ -193,7 +193,7 @@ class DiffTestRunner(TestRunnerBase):
             with open(reference_path) as reference_file:
                 reference_output = reference_file.read()
         except FileNotFoundError:
-            return 'File not found: {}'.format(reference_path)
+            return 'Reference output file not found: {}'.format(reference_path)
 
         succeeded = (output == reference_output)
 
