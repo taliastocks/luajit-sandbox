@@ -119,8 +119,11 @@ class TestRunnerBase(object):
                     self.log(self.blockquote(output, first=(i == 0), last=(i == last_output)))
 
         if self.verbosity >= 2:
-            self.log('{} success + {} failure + {} error = {} tests'.format(
-                succeeded_count, failed_count, error_count, test_count
+            self.log('{} success{} + {} failure{} + {} error{} = {} test{}'.format(
+                succeeded_count, '' if succeeded_count == 1 else 'es',
+                failed_count, '' if failed_count == 1 else 's',
+                error_count, '' if error_count == 1 else 's',
+                test_count, '' if test_count == 1 else 's',
             ))
 
         if failed_count or error_count:
