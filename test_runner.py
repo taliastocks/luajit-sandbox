@@ -232,7 +232,7 @@ class ScriptRunner(RunnerBase):
 
         options = [self.__interpreter_path]
 
-        if '!' in first_line:
+        if '!' in first_line[:3]:
             options = shlex.split(first_line.split('!', 1)[1])
 
         proc = subprocess.Popen(
