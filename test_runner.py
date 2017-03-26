@@ -229,13 +229,14 @@ class ScriptRunner(RunnerBase):
         except FileNotFoundError:
             raise RunnerError('could not open file {}'.format(fpath))
 
-        options = []
+        options = [self.__interpreter_path]
 
         if '!' in first_line:
             options = first_line.split('!', 1)[1].split()
 
         proc = subprocess.Popen(
-            [self.__interpreter_path] + options + [fpath],
+            options + [fpath],
+            executable=self.__interpreter_path,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
