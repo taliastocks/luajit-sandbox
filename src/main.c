@@ -20,6 +20,9 @@
 extern char **environ;
 
 
+#define ERR_TO_STDOUT (1000)
+
+
 const char *argp_program_version = "luajit-sandbox 0.0.0 (development)";
 const char *argp_program_bug_address = "https://github.com/collinstocks/luajit-sandbox/issues";
 static char doc[] = "Sandbox for running untrusted Lua code on Linux.";
@@ -29,16 +32,22 @@ static struct argp_option options[] = {
     "cpu", 't', "seconds", 0,
     "Maximum CPU time in seconds. The script will be notified when its time expires, "
     "and will be allowed one additional CPU second to clean up and exit gracefully. "
-    "If the script does not exit by this hard limit, it is brutally killed.\n"
+    "If the script does not exit by this hard limit, it is brutally killed. "
     "Zero means unlimited.\n"
     "Default: cpu=1",
     0
   },
   {
     "memory", 'm', "value", 0,
-    "Maximum amount of memory available to the script in MiB.\n"
+    "Maximum amount of memory available to the script in MiB. "
     "Zero means unlimited.\n"
     "Default: memory=50",
+    0
+  },
+  {
+    "err-to-stdout", ERR_TO_STDOUT, 0, 0,
+    "Errors should be printed to stdout instead of stderr. "
+    "Internally redirects stderr to stdout.",
     0
   },
   {
@@ -55,6 +64,7 @@ static struct argp_option options[] = {
 struct args_struct {
   struct sandbox_settings sandbox_settings;
   char *script_file;
+  bool err_to_stdout;
 };
 
 
@@ -79,6 +89,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         return EINVAL;
       }
       args->sandbox_settings.max_memory = parsed_value << 20;
+      break;
+    case ERR_TO_STDOUT:
+      args->err_to_stdout = true;
       break;
     case ARGP_KEY_ARG:
       if (args->script_file == NULL) { // Only allow setting the script file once.
@@ -110,7 +123,16 @@ int main(int argc, char **argv) {
   args.sandbox_settings.max_memory = ((size_t) 50) << 20;
   args.sandbox_settings.max_cpu_time = 1;
   args.script_file = NULL;
+  args.err_to_stdout = false;
   argp_parse(&argp, argc, argv, 0, 0, &args);
+
+  // Redirect stderr to stdout if requested.
+  if (args.err_to_stdout) {
+    if (dup2(1, 2) == -1) {
+      perror("failed to redirect stderr to stdout");
+      return 1;
+    }
+  }
 
   // If there's a positional file argument, open it. Otherwise, use stdin.
   int progfile = 0;
