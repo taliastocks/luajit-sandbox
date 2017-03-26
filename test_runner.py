@@ -4,6 +4,7 @@ import argparse
 from collections import defaultdict
 import difflib
 import os
+import shlex
 import subprocess
 import sys
 
@@ -232,7 +233,7 @@ class ScriptRunner(RunnerBase):
         options = [self.__interpreter_path]
 
         if '!' in first_line:
-            options = first_line.split('!', 1)[1].split()
+            options = shlex.split(first_line.split('!', 1)[1])
 
         proc = subprocess.Popen(
             options + [fpath],
