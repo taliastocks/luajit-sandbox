@@ -57,6 +57,16 @@ class TestRunnerBase(object):
         if self.verbosity >= 4:
             self.__captured_output[self.__current_test].append(output)
 
+    def find_tests(self):
+        if os.path.isdir(self.path):
+            for dirpath, dirnames, filenames in os.walk(self.path):
+                for filename in filenames:
+                    fpath = os.path.join(dirpath, filename)
+                    if self.is_test(fpath):
+                        yield fpath
+        else:
+            yield self.path
+
     def run(self):
         succeeded_count = 0
         failed_count = 0
@@ -64,60 +74,55 @@ class TestRunnerBase(object):
         error_count = 0
         skipped_count = 0
 
-        for dirpath, dirnames, filenames in os.walk(self.path):
-            for filename in filenames:
-                fpath = os.path.join(dirpath, filename)
+        for fpath in self.find_tests():
+            filename = os.path.basename(fpath)
+            test_count += 1
 
-                if not self.is_test(fpath):
-                    continue
+            if self.verbosity >= 3:
+                self.log(fpath + ': ', end='')
 
-                test_count += 1
+            skipped = False
+            succeeded = False
+            if self.fast and filename.startswith('SLOW-'):
+                skipped = True
+                skipped_count += 1
+            else:
+                self.__current_test = fpath
+                try:
+                    succeeded = self.run_test(fpath)
+                    if isinstance(succeeded, str):
+                        self.capture_output(succeeded)
+                finally:
+                    self.__current_test = None
+                    # Only keep the captured output if the test failed.
+                    if succeeded is True and fpath in self.__captured_output:
+                        del self.__captured_output[fpath]
 
-                if self.verbosity >= 3:
-                    self.log(fpath + ': ', end='')
-
-                skipped = False
-                succeeded = False
-                if self.fast and filename.startswith('SLOW-'):
-                    skipped = True
-                    skipped_count += 1
+                if succeeded is True:
+                    succeeded_count += 1
+                elif succeeded is False:
+                    failed_count += 1
                 else:
-                    self.__current_test = fpath
-                    try:
-                        succeeded = self.run_test(fpath)
-                        if isinstance(succeeded, str):
-                            self.capture_output(succeeded)
-                    finally:
-                        self.__current_test = None
-                        # Only keep the captured output if the test failed.
-                        if succeeded is True and fpath in self.__captured_output:
-                            del self.__captured_output[fpath]
+                    error_count += 1
 
-                    if succeeded is True:
-                        succeeded_count += 1
-                    elif succeeded is False:
-                        failed_count += 1
-                    else:
-                        error_count += 1
-
-                if self.verbosity >= 3:
-                    if skipped:
-                        self.log(self.warn('SKIPPED'))
-                    elif succeeded is True:
-                        self.log(self.success('PASSED'))
-                    elif succeeded is False:
-                        self.log(self.error('FAILED'))
-                    else:
-                        self.log(self.error('ERROR', worse=True))
-                elif self.verbosity >= 1:
-                    if skipped:
-                        self.log(self.warn('S'), end='')
-                    elif succeeded is True:
-                        self.log(self.success('.'), end='')
-                    elif succeeded is False:
-                        self.log(self.error('F'), end='')
-                    else:
-                        self.log(self.error('E', worse=True), end='')
+            if self.verbosity >= 3:
+                if skipped:
+                    self.log(self.warn('SKIPPED'))
+                elif succeeded is True:
+                    self.log(self.success('PASSED'))
+                elif succeeded is False:
+                    self.log(self.error('FAILED'))
+                else:
+                    self.log(self.error('ERROR', worse=True))
+            elif self.verbosity >= 1:
+                if skipped:
+                    self.log(self.warn('S'), end='')
+                elif succeeded is True:
+                    self.log(self.success('.'), end='')
+                elif succeeded is False:
+                    self.log(self.error('F'), end='')
+                else:
+                    self.log(self.error('E', worse=True), end='')
 
         if self.verbosity >= 1:
             self.log()
