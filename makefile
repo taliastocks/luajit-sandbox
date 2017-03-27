@@ -17,6 +17,10 @@ default: bin/exe
 test: bin/exe
 	./test_runner.py -vvvv
 
+.PHONY: test-fast
+test-fast: bin/exe
+	./test_runner.py -vvvv --fast
+
 .PHONY: clean
 clean:
 	rm -rf bin/* build/*

@@ -21,8 +21,9 @@ class RunnerError(Exception):
 
 class TestRunnerBase(object):
 
-    def __init__(self, path, verbosity):
+    def __init__(self, path, fast, verbosity):
         self.path = path
+        self.fast = fast
         self.verbosity = verbosity
         self.__captured_output = defaultdict(list)
         self.__current_test = None
@@ -61,6 +62,7 @@ class TestRunnerBase(object):
         failed_count = 0
         test_count = 0
         error_count = 0
+        skipped_count = 0
 
         for dirpath, dirnames, filenames in os.walk(self.path):
             for filename in filenames:
@@ -74,34 +76,43 @@ class TestRunnerBase(object):
                 if self.verbosity >= 3:
                     self.log(fpath + ': ', end='')
 
-                self.__current_test = fpath
+                skipped = False
                 succeeded = False
-                try:
-                    succeeded = self.run_test(fpath)
-                    if isinstance(succeeded, str):
-                        self.capture_output(succeeded)
-                finally:
-                    self.__current_test = None
-                    # Only keep the captured output if the test failed.
-                    if succeeded is True and fpath in self.__captured_output:
-                        del self.__captured_output[fpath]
-
-                if succeeded is True:
-                    succeeded_count += 1
-                elif succeeded is False:
-                    failed_count += 1
+                if self.fast and filename.startswith('SLOW-'):
+                    skipped = True
+                    skipped_count += 1
                 else:
-                    error_count += 1
+                    self.__current_test = fpath
+                    try:
+                        succeeded = self.run_test(fpath)
+                        if isinstance(succeeded, str):
+                            self.capture_output(succeeded)
+                    finally:
+                        self.__current_test = None
+                        # Only keep the captured output if the test failed.
+                        if succeeded is True and fpath in self.__captured_output:
+                            del self.__captured_output[fpath]
+
+                    if succeeded is True:
+                        succeeded_count += 1
+                    elif succeeded is False:
+                        failed_count += 1
+                    else:
+                        error_count += 1
 
                 if self.verbosity >= 3:
-                    if succeeded is True:
+                    if skipped:
+                        self.log(self.warn('SKIPPED'))
+                    elif succeeded is True:
                         self.log(self.success('PASSED'))
                     elif succeeded is False:
                         self.log(self.error('FAILED'))
                     else:
                         self.log(self.error('ERROR', worse=True))
                 elif self.verbosity >= 1:
-                    if succeeded is True:
+                    if skipped:
+                        self.log(self.warn('S'), end='')
+                    elif succeeded is True:
                         self.log(self.success('.'), end='')
                     elif succeeded is False:
                         self.log(self.error('F'), end='')
@@ -120,10 +131,11 @@ class TestRunnerBase(object):
                     self.log(self.blockquote(output, first=(i == 0), last=(i == last_output)))
 
         if self.verbosity >= 2:
-            self.log('{} success{} + {} failure{} + {} error{} = {} test{}'.format(
+            self.log('{} success{} + {} failure{} + {} error{} + {} skipped = {} test{}'.format(
                 succeeded_count, '' if succeeded_count == 1 else 'es',
                 failed_count, '' if failed_count == 1 else 's',
                 error_count, '' if error_count == 1 else 's',
+                skipped_count,
                 test_count, '' if test_count == 1 else 's',
             ))
 
@@ -261,6 +273,7 @@ def main():
         'path', nargs='?', default=os.path.join(this_dir, 'tests'),
         help='Path to a test or a directory with tests in it.'
     )
+    parser.add_argument('--fast', '-f', action='store_true', help='Skip tests marked as "SLOW-" in their filename.')
     parser.add_argument('--verbose', '-v', default=0, action='count', dest='verbosity')
 
     test_runner = DiffTestRunner(**vars(parser.parse_args()))
