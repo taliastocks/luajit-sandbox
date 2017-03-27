@@ -14,3 +14,8 @@
 3: level 2 error
 3: level 1 catch
 3: level 2 catch error
+4: level 1 part 1
+4: level 2
+4: level 1 part 2
+4: level 1 catch
+4: level 1 error

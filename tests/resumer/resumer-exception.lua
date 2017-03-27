@@ -79,3 +79,23 @@ end, function (error)
   print "3: level 1 catch"
   print(error)
 end)
+
+
+try_catch(function ()
+  print "4: level 1 part 1"
+
+  try_catch(function ()
+    print "4: level 2"
+  end, function (error)
+    print "4: level 2 catch this shouldn't get printed"
+    print(error)
+
+    throw "4: level 2 catch error this shouldn't get printed"
+  end)
+
+  print "4: level 1 part 2"
+  throw "4: level 1 error"
+end, function (error)
+  print "4: level 1 catch"
+  print(error)
+end)
