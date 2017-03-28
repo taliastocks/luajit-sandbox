@@ -1,0 +1,11 @@
+main_thread creating threads 1-4
+main_thread exiting
+thread_4 will wait for thread_2
+thread_3 will wait for thread_4
+thread_2 will wait for thread_1
+thread_1 will create a new thread and wait for it
+thread_1_child just exits
+thread_1 resumed, and will exit
+thread_2 resumed, and will exit
+thread_4 resumed, and will exit
+thread_3 resumed, and will exit
